@@ -1,0 +1,363 @@
+### ==============================================
+### 🛍️ DeveloperStore API - Testes Manuais HTTP
+### ==============================================
+### 
+### Este arquivo contém todos os testes para as APIs do projeto DeveloperStore
+### 
+### 📋 Como usar:
+### 1. Inicie o projeto: dotnet run --project src/api/DeveloperEvaluation.Api
+### 2. Clique em "Send Request" acima de cada requisição
+### 3. Verifique as respostas no painel direito
+### 
+### 🌐 URLs Base:
+### - HTTP:  http://localhost:5000
+### - HTTPS: https://localhost:5001
+### 
+### 📚 Documentação completa disponível em:
+### - Swagger: http://localhost:5000/swagger
+### 
+### ==============================================
+
+@baseUrl = http://localhost:5000
+@contentType = application/json
+
+### ==============================================
+### 👤 AUTENTICAÇÃO E USUÁRIOS
+### ==============================================
+
+### 1. Criar novo usuário
+POST {{baseUrl}}/api/users
+Content-Type: {{contentType}}
+
+{
+  "username": "testuser001",
+  "email": "testuser001@example.com",
+  "password": "TestPassword123!",
+  "phone": "+5511999887766",
+  "status": "Active",
+  "role": "Customer"
+}
+
+### 2. Fazer login (obter token JWT)
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser001@example.com",
+  "password": "TestPassword123!"
+}
+
+### 3. Extrair token da resposta do login
+@authToken = {{login.response.body.token}}
+
+### 4. Listar todos os usuários (com token)
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{authToken}}
+
+### 5. Buscar usuário específico por ID
+GET {{baseUrl}}/api/users/{{login.response.body.id}}
+Authorization: Bearer {{authToken}}
+
+### 6. Atualizar usuário
+PUT {{baseUrl}}/api/users/{{login.response.body.id}}
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "username": "testuser001_updated",
+  "email": "testuser001@example.com",
+  "phone": "+5511999887777",
+  "status": "Active",
+  "role": "Customer"
+}
+
+### 7. Deletar usuário (desativar)
+DELETE {{baseUrl}}/api/users/{{login.response.body.id}}
+Authorization: Bearer {{authToken}}
+
+### ==============================================
+### 📦 PRODUTOS
+### ==============================================
+
+### 8. Listar todos os produtos (primeira página)
+GET {{baseUrl}}/api/products
+Authorization: Bearer {{authToken}}
+
+### 9. Listar produtos com paginação e ordenação
+GET {{baseUrl}}/api/products?_page=1&_size=5&_order=name asc
+Authorization: Bearer {{authToken}}
+
+### 10. Buscar produtos por categoria
+GET {{baseUrl}}/api/products/category/Electronics
+Authorization: Bearer {{authToken}}
+
+### 11. Listar todas as categorias disponíveis
+GET {{baseUrl}}/api/products/categories
+Authorization: Bearer {{authToken}}
+
+### 12. Buscar produto específico por ID
+GET {{baseUrl}}/api/products/60d5ec49f1b2c8b1f8e4b001
+Authorization: Bearer {{authToken}}
+
+### 13. Criar novo produto
+POST {{baseUrl}}/api/products
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Smartphone Galaxy S25",
+  "description": "Smartphone top de linha com tecnologia avançada",
+  "category": "Electronics",
+  "price": 2599.99,
+  "stock": 50,
+  "isActive": true
+}
+
+### 14. Atualizar produto
+PUT {{baseUrl}}/api/products/60d5ec49f1b2c8b1f8e4b001
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "name": "Smartphone Galaxy S25 Pro",
+  "description": "Smartphone premium com recursos avançados",
+  "category": "Electronics",
+  "price": 2899.99,
+  "stock": 30,
+  "isActive": true
+}
+
+### 15. Deletar produto (desativar)
+DELETE {{baseUrl}}/api/products/60d5ec49f1b2c8b1f8e4b001
+Authorization: Bearer {{authToken}}
+
+### ==============================================
+### 🛒 VENDAS (SALES) - Caso de Uso DeveloperStore
+### ==============================================
+
+### 16. Listar todas as vendas (primeira página)
+GET {{baseUrl}}/api/sales
+Authorization: Bearer {{authToken}}
+
+### 17. Listar vendas com filtros avançados
+GET {{baseUrl}}/api/sales?page=1&size=10&customerName=João&status=active&order=saleDate desc
+Authorization: Bearer {{authToken}}
+
+### 18. Filtrar vendas por data
+GET {{baseUrl}}/api/sales?minSaleDate=2024-01-01&maxSaleDate=2024-12-31
+Authorization: Bearer {{authToken}}
+
+### 19. Filtrar vendas por filial
+GET {{baseUrl}}/api/sales?branchName=Filial Centro
+Authorization: Bearer {{authToken}}
+
+### 20. Criar nova venda (com desconto automático - 4+ itens)
+# @name createSale
+POST {{baseUrl}}/api/sales
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "saleNumber": "SALE-2024-001",
+  "customerId": "{{login.response.body.id}}",
+  "customerName": "João Silva",
+  "branchName": "Filial Centro",
+  "items": [
+    {
+      "productId": "60d5ec49f1b2c8b1f8e4b001",
+      "productName": "Smartphone Galaxy S25",
+      "quantity": 5,
+      "unitPrice": 2599.99
+    },
+    {
+      "productId": "60d5ec49f1b2c8b1f8e4b002",
+      "productName": "Fone Bluetooth Premium",
+      "quantity": 2,
+      "unitPrice": 299.99
+    }
+  ]
+}
+
+### 21. Criar venda com desconto alto (10+ itens idênticos = 20% desconto)
+POST {{baseUrl}}/api/sales
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "saleNumber": "SALE-2024-002",
+  "customerId": "{{login.response.body.id}}",
+  "customerName": "Maria Santos",
+  "branchName": "Filial Shopping",
+  "items": [
+    {
+      "productId": "60d5ec49f1b2c8b1f8e4b003",
+      "productName": "Case Protetor",
+      "quantity": 15,
+      "unitPrice": 49.99
+    }
+  ]
+}
+
+### 22. Buscar venda específica por ID
+GET {{baseUrl}}/api/sales/{{createSale.response.body.id}}
+Authorization: Bearer {{authToken}}
+
+### 23. Atualizar venda existente
+PUT {{baseUrl}}/api/sales/{{createSale.response.body.id}}
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "saleNumber": "SALE-2024-001-UPD",
+  "customerId": "{{login.response.body.id}}",
+  "customerName": "João Silva Updated",
+  "branchName": "Filial Centro",
+  "items": [
+    {
+      "productId": "60d5ec49f1b2c8b1f8e4b001",
+      "productName": "Smartphone Galaxy S25",
+      "quantity": 3,
+      "unitPrice": 2599.99
+    }
+  ]
+}
+
+### 24. Cancelar item específico da venda
+DELETE {{baseUrl}}/api/sales/{{createSale.response.body.id}}/items/ITEM_ID_HERE
+Authorization: Bearer {{authToken}}
+
+### 25. Cancelar venda completa
+DELETE {{baseUrl}}/api/sales/{{createSale.response.body.id}}
+Authorization: Bearer {{authToken}}
+
+### ==============================================
+### 🧪 TESTES DE REGRAS DE NEGÓCIO
+### ==============================================
+
+### 26. Teste: Erro ao tentar vender mais de 20 itens idênticos
+POST {{baseUrl}}/api/sales
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "saleNumber": "SALE-ERROR-001",
+  "customerId": "{{login.response.body.id}}",
+  "customerName": "Teste Erro",
+  "branchName": "Filial Teste",
+  "items": [
+    {
+      "productId": "60d5ec49f1b2c8b1f8e4b001",
+      "productName": "Produto Teste",
+      "quantity": 25,
+      "unitPrice": 100.00
+    }
+  ]
+}
+
+### 27. Teste: Desconto de 10% para 4-9 itens idênticos
+POST {{baseUrl}}/api/sales
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "saleNumber": "SALE-DISCOUNT-10",
+  "customerId": "{{login.response.body.id}}",
+  "customerName": "Teste Desconto 10%",
+  "branchName": "Filial Desconto",
+  "items": [
+    {
+      "productId": "60d5ec49f1b2c8b1f8e4b001",
+      "productName": "Produto Desconto 10%",
+      "quantity": 6,
+      "unitPrice": 100.00
+    }
+  ]
+}
+
+### 28. Teste: Desconto de 20% para 10-20 itens idênticos
+POST {{baseUrl}}/api/sales
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "saleNumber": "SALE-DISCOUNT-20",
+  "customerId": "{{login.response.body.id}}",
+  "customerName": "Teste Desconto 20%",
+  "branchName": "Filial Desconto",
+  "items": [
+    {
+      "productId": "60d5ec49f1b2c8b1f8e4b001",
+      "productName": "Produto Desconto 20%",
+      "quantity": 12,
+      "unitPrice": 100.00
+    }
+  ]
+}
+
+### ==============================================
+### 🔍 TESTES DE VALIDAÇÃO E ERRO
+### ==============================================
+
+### 29. Teste: Dados inválidos para criação de usuário
+POST {{baseUrl}}/api/users
+Content-Type: {{contentType}}
+
+{
+  "username": "",
+  "email": "email-invalido",
+  "password": "123",
+  "phone": "",
+  "status": "Invalid",
+  "role": "InvalidRole"
+}
+
+### 30. Teste: Login com credenciais inválidas
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "inexistente@example.com",
+  "password": "senhaerrada"
+}
+
+### 31. Teste: Acesso sem token de autorização
+GET {{baseUrl}}/api/users
+
+### 32. Teste: Buscar recurso inexistente
+GET {{baseUrl}}/api/sales/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{authToken}}
+
+### ==============================================
+### 📊 TESTES DE PERFORMANCE E PAGINAÇÃO
+### ==============================================
+
+### 33. Teste: Paginação com tamanho máximo
+GET {{baseUrl}}/api/products?_page=1&_size=100
+Authorization: Bearer {{authToken}}
+
+### 34. Teste: Paginação com tamanho excessivo (deve limitar)
+GET {{baseUrl}}/api/products?_page=1&_size=1000
+Authorization: Bearer {{authToken}}
+
+### 35. Teste: Ordenação múltipla
+GET {{baseUrl}}/api/sales?order=saleDate desc, customerName asc, totalAmount desc
+Authorization: Bearer {{authToken}}
+
+### ==============================================
+### 🏁 FIM DOS TESTES
+### ==============================================
+### 
+### 📋 Resultados Esperados:
+### ✅ Status 200/201: Operações bem-sucedidas
+### ✅ Status 400: Dados inválidos (comportamento correto)
+### ✅ Status 401: Acesso negado sem token (comportamento correto)
+### ✅ Status 404: Recurso não encontrado (comportamento correto)
+### ✅ Status 500: Erro interno (investigar se ocorrer)
+### 
+### 🔧 Troubleshooting:
+### - Certifique-se que a API esteja rodando na porta 5000
+### - Verifique se o MongoDB está ativo
+### - Confirme se o token JWT não expirou
+### 
+### ==============================================
