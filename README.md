@@ -196,4 +196,3 @@ dotnet test
 ```
 
 > **Nota:** Os testes E2E utilizam TestContainers para criar um ambiente isolado com MongoDB durante a execução dos testes.
-> **Nota:** Foram deixa
